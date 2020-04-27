@@ -2,6 +2,9 @@
 #include <string>
 #include <stack>
 #include <vector>
+#include <cstdlib>
+#include <fstream>
+#include <chrono>
 
 using namespace std;
 
@@ -59,7 +62,7 @@ class Graph {
 
 void DFSVisit(Graph g, Node * currNode){
   currNode->setColor('g');
-  currNode->print();
+  //currNode->print();
   vector<Node *> adjList = currNode->getAdj();
   for(auto it = adjList.begin(); it != adjList.end(); it++){
     if( (*it)->getColor() == 'w' ) DFSVisit(g, *it); 
@@ -79,6 +82,62 @@ int Node::ids = 0;
 
 
 //next time - generator for increasing density, size, fix one and increase the other, etc
+
+//give #numNodes, every node has numNodes/2 adjacents
+Graph * generateGraphsSize(int numNodes){
+  srand(time(0));
+  Graph * ret = new Graph();
+  for(int i=0; i<numNodes; i++){
+    Node * newNode = new Node(i);
+    ret->addNode(newNode);
+  }
+  int numEdgesPerNode = numNodes/2;
+  vector<Node *> nodeList = ret->getGraph();
+  for(auto it = nodeList.begin(); it != nodeList.end(); it++){
+    Node * currNode = (*it);
+    vector<int> selectedAdjs;
+    for(int i=0; i<numEdgesPerNode; i++){
+      if(selectedAdjs.size() == 0){
+        int r = rand() % nodeList.size(); 
+        currNode->addAdj(nodeList.at(r));
+        selectedAdjs.push_back(r);
+      }else{
+        int r;
+        bool unique = false;
+        while(!unique){
+          r = rand() % nodeList.size();
+          for(auto selected = selectedAdjs.begin(); selected != selectedAdjs.end(); selected++){
+            if(r != (*selected)){
+             unique=true;
+            }else if(r == (*selected)){
+             unique = false;
+             break;
+            }
+          }
+        }
+        currNode->addAdj(nodeList.at(r));
+        selectedAdjs.push_back(r);
+      }
+    }
+  }
+  return ret;
+}
+
+
+void tester(){
+  ofstream densityOutput("densityOutput.txt");
+  for(int i=0; i<1000; i+=5){
+    Graph *g = generateGraphsSize(i);
+    //start time
+    auto start = chrono::high_resolution_clock::now();
+    DFS(*g);
+    //end time
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::nanoseconds>(end-start);
+    //output
+    densityOutput<<duration.count()<<"\n"<<endl;
+  }
+}
 
 int main(int argc, char** args) {
 	
@@ -104,6 +163,7 @@ int main(int argc, char** args) {
   */
   //cout << (&n)->getColor() <<endl;
 
+/*
 
   Node one(1);
   Node two(2);
@@ -136,6 +196,11 @@ int main(int argc, char** args) {
   h.addNode(&nine);
   
   DFS(h);
+
+
+*/
+
+  tester();
 
 	return 0;
 }
