@@ -123,19 +123,87 @@ Graph * generateGraphsSize(int numNodes){
   return ret;
 }
 
+//give #numEdgesPerNode, generate constant numNodes as 2 * numEdgesPerNode
+Graph * generateGraphsEdges(int numEdgesPerNode){
+  srand(time(0));
+  Graph * ret = new Graph();
+  int numNodes = 2*numEdgesPerNode;
+  for(int i=0; i<numNodes; i++){
+    Node * newNode = new Node(i);
+    ret->addNode(newNode);
+  }
+  vector<Node *> nodeList = ret->getGraph();
+  for(auto it = nodeList.begin(); it != nodeList.end(); it++){
+    Node * currNode = (*it);
+    vector<int> selectedAdjs;
+    for(int i=0; i<numEdgesPerNode; i++){
+      if(selectedAdjs.size() == 0){
+        int r = rand() % nodeList.size(); 
+        currNode->addAdj(nodeList.at(r));
+        selectedAdjs.push_back(r);
+      }else{
+        int r;
+        bool unique = false;
+        while(!unique){
+          r = rand() % nodeList.size();
+          for(auto selected = selectedAdjs.begin(); selected != selectedAdjs.end(); selected++){
+            if(r != (*selected)){
+             unique=true;
+            }else if(r == (*selected)){
+             unique = false;
+             break;
+            }
+          }
+        }
+        currNode->addAdj(nodeList.at(r));
+        selectedAdjs.push_back(r);
+      }
+    }
+  }
+  return ret;
+}
+
 
 void tester(){
-  ofstream densityOutput("densityOutput.txt");
-  for(int i=0; i<1000; i+=5){
-    Graph *g = generateGraphsSize(i);
-    //start time
-    auto start = chrono::high_resolution_clock::now();
-    DFS(*g);
-    //end time
-    auto end = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::nanoseconds>(end-start);
-    //output
-    densityOutput<<duration.count()<<"\n"<<endl;
+  ofstream sizeOutput("sizeOutput.txt");
+  for(int i=5; i<1005; i+=5){
+    vector<int> results;
+    for(int j=0; j<10; j++){
+    	Graph *g = generateGraphsSize(i);
+    	//start time
+    	auto start = chrono::high_resolution_clock::now();
+    	DFS(*g);
+    	//end time
+    	auto end = chrono::high_resolution_clock::now();
+    	auto duration = chrono::duration_cast<chrono::nanoseconds>(end-start);
+    	//output
+    	results.push_back(duration.count());
+    }
+    int avg = 0;
+    for(auto it = results.begin(); it < results.end(); it++){
+	avg+=(*it);
+    }
+    sizeOutput<<i<<","<<avg/results.size()<<"\n"<<endl;
+  }
+   ofstream densityOutput("densityOutput.txt");
+  for(int i=5; i<1005; i+=5){
+     vector<int> results;
+     for(int j=0; j<10; j++){	
+   	Graph *g = generateGraphsEdges(i);
+    	//start time
+    	auto start = chrono::high_resolution_clock::now();
+    	DFS(*g);
+    	//end time
+    	auto end = chrono::high_resolution_clock::now();
+    	auto duration = chrono::duration_cast<chrono::nanoseconds>(end-start);
+    	//output
+	results.push_back(duration.count());
+    }
+    int avg = 0;
+    for(auto it = results.begin(); it < results.end(); it++){
+	avg+=(*it);
+    }
+    densityOutput<<i<<","<<avg/results.size()<<"\n"<<endl;
   }
 }
 
